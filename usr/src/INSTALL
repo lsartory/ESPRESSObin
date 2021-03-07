@@ -1,0 +1,62 @@
+# Configure the new kernel
+cd /usr/src/linux/linux-xxx-gentoo
+cp ../linux/.config .
+make oldconfig
+
+# Patch the PCI Express Aardvark driver
+vi drivers/pci/controller/pci-aardvark.c
+# Enable only GEN_1 near line 262
+#   /* Setup link speed */
+#   reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+#   reg &= ~PCIE_GEN_SEL_MSK;
+#   //if (gen == 3)
+#   //  reg |= SPEED_GEN_3;
+#   //else if (gen == 2)
+#   //  reg |= SPEED_GEN_2;
+#   //else
+#       reg |= SPEED_GEN_1;
+#   advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
+
+# Patch the Atheros driver
+vi drivers/net/wireless/ath/regd.c
+# Fix the sanitation near line 674
+#   static void ath_regd_sanitize(struct ath_regulatory *reg)
+#   {
+#       if (reg->current_rd != COUNTRY_ERD_FLAG && reg->current_rd != 0)
+#           return;
+#       printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
+#       //reg->current_rd = 0x64;
+#       reg->current_rd = COUNTRY_ERD_FLAG | CTRY_FRANCE;
+#   }
+
+# Build and install the kernel
+VERSION=$(basename $(pwd) | sed "s@linux-\([^-]\+\)-gentoo@\1@"); time sh -c "echo $VERSION; mount /boot; make -j3 && make modules_install && cp arch/arm64/boot/Image /boot/boot/${VERSION}-aarch64-r0.Image && cp arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtb /boot/boot/armada-3720-espressobin-${VERSION}.dtb"
+
+# Set the current kernel
+VERSION=xxx; ln -fs ${VERSION}-aarch64-r0.Image /boot/boot/Image && ln -fs armada-3720-espressobin-${VERSION}.dtb /boot/boot/armada-3720-community.dtb
+eselect kernel list
+eselect kernel set 1
+
+# Reboot
+reboot
+
+# Install the WiFi driver
+cd /usr/src/rtl88x2BU/rtl88x2bu
+time make -j3 ARCH=arm64 clean all && make ARCH=arm64 install && sync && reboot && exit
+
+
+
+
+# U-Boot
+cd /usr/src/bootloader/u-boot-marvell
+make mvebu_espressobin-88f3720_defconfig
+make DEVICE_TREE=armada-3720-espressobin
+
+# ATF
+cd /usr/src/bootloader/arm-trusted-firmware
+export BL33=/usr/src/bootloader/u-boot-marvell/u-boot.bin
+make DEBUG=1 USE_COHERENT_MEM=0 LOG_LEVEL=20 SECURE=0 CLOCKSPRESET=CPU_1000_DDR_800 DDR_TOPOLOGY=7 BOOTDEV=SPINOR PARTNUM=0 WTP=$PWD/../A3700-utils-marvell/ MV_DDR_PATH=$PWD/../mv-ddr-marvell PLAT=a3700 all fip
+cp build/a3700/debug/flash-image.bin /usr/src/bootloader
+
+# Install bootloader from USB
+bubt flash-image.bin spi usb

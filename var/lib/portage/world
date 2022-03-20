@@ -10,10 +10,13 @@ cross-arm-linux-gnueabi/glibc
 cross-arm-linux-gnueabi/linux-headers
 dev-vcs/git
 net-misc/minidlna
+net-misc/ntp
+net-misc/wol
 net-wireless/hostapd
 net-wireless/iw
-sys-apps/haveged
+sys-apps/busybox
 sys-apps/pciutils
+sys-apps/rng-tools
 sys-apps/usbutils
 sys-devel/crossdev
 sys-fs/btrfs-progs

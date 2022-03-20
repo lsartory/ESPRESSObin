@@ -30,10 +30,10 @@ vi drivers/net/wireless/ath/regd.c
 #   }
 
 # Build and install the kernel
-VERSION=$(basename $(pwd) | sed "s@linux-\([^-]\+\)-gentoo@\1@"); time sh -c "echo $VERSION; mount /boot; make -j3 && make modules_install && cp arch/arm64/boot/Image /boot/boot/${VERSION}-aarch64-r0.Image && cp arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtb /boot/boot/armada-3720-espressobin-${VERSION}.dtb"
+VERSION=$(basename $(pwd -P) | sed "s@linux-\([^-]\+\)-gentoo@\1@"); time sh -c "echo $VERSION; mount /boot; make -j3 && make modules_install && cp arch/arm64/boot/Image /boot/boot/${VERSION}-aarch64-r0.Image && cp arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtb /boot/boot/armada-3720-espressobin-${VERSION}.dtb"
 
 # Set the current kernel
-VERSION=xxx; ln -fs ${VERSION}-aarch64-r0.Image /boot/boot/Image && ln -fs armada-3720-espressobin-${VERSION}.dtb /boot/boot/armada-3720-community.dtb
+VERSION=$(basename $(pwd -P) | sed "s@linux-\([^-]\+\)-gentoo@\1@"); ln -fs ${VERSION}-aarch64-r0.Image /boot/boot/Image && ln -fs armada-3720-espressobin-${VERSION}.dtb /boot/boot/armada-3720-community.dtb
 eselect kernel list
 eselect kernel set 1
 

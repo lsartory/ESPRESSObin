@@ -16,3 +16,25 @@ rc_net_br0_need="net.eth0"
 bridge_forward_delay_br0=0
 bridge_hello_time_br0=1000
 bridge_stp_state_br0=1
+
+# Workaround for the invalid ath10k country code
+postup() {
+    if [ "${IFACE}" = "wlan1" ]
+    then
+        sleep 2
+        for i in $(seq 1 10)
+        do
+            if (iw list | grep "(no IR)" | grep -q "5180 MHz")
+            then
+                rmmod ath10k_pci
+                rmmod ath10k_core
+                rmmod ath
+                modprobe ath10k_pci
+                sleep 2
+            else
+                break
+            fi
+        done
+    fi
+    return 0
+}

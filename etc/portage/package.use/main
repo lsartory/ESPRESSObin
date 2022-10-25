@@ -1,2 +1,4 @@
 dev-libs/gmp static-libs
 dev-libs/libxml2 python
+sys-apps/busybox static -pam
+sys-libs/libxcrypt static-libs

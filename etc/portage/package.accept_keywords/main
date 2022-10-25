@@ -1,1 +1,3 @@
-net-misc/minidlna **
+app-shells/gentoo-zsh-completions ~*
+net-misc/minidlna ~*
+net-wireless/hostapd ~*
